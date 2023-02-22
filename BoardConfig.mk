@@ -1,8 +1,18 @@
 #
-# Copyright (C) 2023 The Android Open Source Project
-# Copyright (C) 2023 SebaUbuntu's TWRP device tree generator
+# Copyright (C) 2020 The Android Open Source Project
 #
-# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 DEVICE_PATH := device/samsung/a02
@@ -10,79 +20,114 @@ DEVICE_PATH := device/samsung/a02
 # For building with minimal manifest
 ALLOW_MISSING_DEPENDENCIES := true
 
+# Bootloader
+BOARD_VENDOR := samsung
+TARGET_SOC := k39tv1_bsp_titan_rat
+TARGET_BOOTLOADER_BOARD_NAME := mt6739
+TARGET_NO_BOOTLOADER := true
+TARGET_NO_RADIOIMAGE := true
+TARGET_USES_UEFI := true
+
 # Architecture
 TARGET_ARCH := arm
 TARGET_ARCH_VARIANT := armv7-a-neon
 TARGET_CPU_ABI := armeabi-v7a
 TARGET_CPU_ABI2 := armeabi
-TARGET_CPU_VARIANT := generic
 TARGET_CPU_VARIANT_RUNTIME := cortex-a53
 
 TARGET_USES_64_BIT_BINDER := true
 
-# APEX
-DEXPREOPT_GENERATE_APEX_IMAGE := true
+TARGET_CPU_SMP := true
+ENABLE_CPUSETS := true
+ENABLE_SCHEDBOOST := true
 
-# Bootloader
-TARGET_BOOTLOADER_BOARD_NAME := k39tv1_bsp_titan_hamster
-TARGET_NO_BOOTLOADER := true
+# File systems
+TARGET_USERIMAGES_USE_EXT4 := true
+TARGET_USERIMAGES_USE_F2FS := true
 
-# Display
-TARGET_SCREEN_DENSITY := 300
+# Platform
+TARGET_BOARD_PLATFORM := mt6739
+TARGET_BOARD_PLATFORM_GPU := PowerVR GE8100
+
 
 # Kernel
 BOARD_BOOTIMG_HEADER_VERSION := 2
-BOARD_KERNEL_BASE := 0x40000000
 BOARD_KERNEL_CMDLINE := bootopt=64S3,32S1,32S1
+TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/Image
+TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
+BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
+BOARD_KERNEL_SEPARATED_DTBO := true
+BOARD_KERNEL_BASE := 0x40000000
 BOARD_KERNEL_PAGESIZE := 2048
 BOARD_RAMDISK_OFFSET := 0x05000000
 BOARD_KERNEL_TAGS_OFFSET := 0x04000000
+BOARD_FLASH_BLOCK_SIZE := 131072 # (BOARD_KERNEL_PAGESIZE * 64)
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOTIMG_HEADER_VERSION)
 BOARD_MKBOOTIMG_ARGS += --ramdisk_offset $(BOARD_RAMDISK_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --tags_offset $(BOARD_KERNEL_TAGS_OFFSET)
-BOARD_KERNEL_IMAGE_NAME := Image
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
-BOARD_KERNEL_SEPARATED_DTBO := true
-TARGET_KERNEL_CONFIG := a02_defconfig
-TARGET_KERNEL_SOURCE := kernel/samsung/a02
+BOARD_KERNEL_IMAGE_NAME := Image
+TARGET_KERNEL_CLANG_COMPILE := true
 
-# Kernel - prebuilt
+TARGET_KERNEL_ARCH := arm
+TARGET_KERNEL_HEADER_ARCH := arm
+TARGET_KERNEL_SOURCE := kernel/samsung/a02
+TARGET_KERNEL_CONFIG := a02_defconfig
+
+# Kernel-Prebuilt
 TARGET_FORCE_PREBUILT_KERNEL := true
 ifeq ($(TARGET_FORCE_PREBUILT_KERNEL),true)
-TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
-TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
+BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
 BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
 BOARD_INCLUDE_DTB_IN_BOOTIMG := 
-BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
-BOARD_KERNEL_SEPARATED_DTBO := 
+BOARD_INCLUDE_RECOVERY_DTBO := true
+TARGET_KERNEL_ARCH := arm
+BOARD_KERNEL_SEPARATED_DTBO :=
 endif
 
+
+# Recovery
+TARGET_USERIMAGES_USE_EXT4 := true
+TARGET_USERIMAGES_USE_F2FS := true
+BOARD_HAS_LARGE_FILESYSTEM := true
+BOARD_HAS_NO_SELECT_BUTTON := true
+
 # Partitions
-BOARD_FLASH_BLOCK_SIZE := 131072 # (BOARD_KERNEL_PAGESIZE * 64)
+BOARD_FLASH_BLOCK_SIZE := 131072
 BOARD_BOOTIMAGE_PARTITION_SIZE := 25165824
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 25165824
-BOARD_HAS_LARGE_FILESYSTEM := true
 BOARD_SYSTEMIMAGE_PARTITION_TYPE := ext4
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
 TARGET_COPY_OUT_VENDOR := vendor
-BOARD_SUPER_PARTITION_SIZE := 9126805504 # TODO: Fix hardcoded value
+
+# Dynamic Partitions
+BOARD_SUPER_PARTITION_SIZE := 9126805504
 BOARD_SUPER_PARTITION_GROUPS := samsung_dynamic_partitions
+
+# Set error limit to SUPER_PARTITION_SIZE - 500MB // 524288000 bytes
+BOARD_SUPER_PARTITION_ERROR_LIMIT := 8015314944
+
+# DYNAMIC_PARTITIONS_SIZE = (SUPER_PARTITION_SIZE / 2) - 4MB // 4194304 bytes
+BOARD_SAMSUNG_DYNAMIC_PARTITIONS_SIZE := 9122611200
 BOARD_SAMSUNG_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product odm
-BOARD_SAMSUNG_DYNAMIC_PARTITIONS_SIZE := 9122611200 # TODO: Fix hardcoded value
 
-# Platform
-TARGET_BOARD_PLATFORM := mt6739
+# Slightly overprovision dynamic partitions with 50MiB to
+# allow on-device file editing
+BOARD_SYSTEMIMAGE_PARTITION_RESERVED_SIZE := 62428800
+BOARD_VENDORIMAGE_PARTITION_RESERVED_SIZE := 62428800
+BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE := 62428800
 
-# Recovery
-BOARD_INCLUDE_RECOVERY_DTBO := true
-TARGET_USERIMAGES_USE_EXT4 := true
-TARGET_USERIMAGES_USE_F2FS := true
+# System as root
+BOARD_ROOT_EXTRA_FOLDERS := cache carrier data_mirror efs keyrefuge linkerconfig metadata omr optics prism spu
+BOARD_SUPPRESS_SECURE_ERASE := true
 
-# Security patch level
-VENDOR_SECURITY_PATCH := 2021-08-01
+# Workaround for error copying vendor files to recovery ramdisk
+BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
+TARGET_COPY_OUT_VENDOR := vendor
 
-# Verified Boot
+
+# Android Verified Boot
 BOARD_AVB_ENABLE := true
 BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
 BOARD_AVB_RECOVERY_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
@@ -101,3 +146,4 @@ TW_EXTRA_LANGUAGES := true
 TW_SCREEN_BLANK_ON_BOOT := true
 TW_INPUT_BLACKLIST := "hbtp_vm"
 TW_USE_TOOLBOX := true
+

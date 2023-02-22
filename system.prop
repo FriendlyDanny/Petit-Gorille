@@ -1,0 +1,7 @@
+ro.display.series=Samsung A02
+ro.product.board=k39tv1_bsp_titan_hamster
+ro.board.platform=mt6739
+ro.boot.dynamic_partitions=true
+sys.usb.controller=musb-hdrc
+#fbe.metadata.wrappedkey=true
+ro.boot.boot_devices=bootdevice,soc/11230000.mmc,11230000.mmc,soc/11270000.ufshci,11270000.ufshci
